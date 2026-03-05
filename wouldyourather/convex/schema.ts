@@ -5,9 +5,11 @@ import { v } from "convex/values";
 const schema = defineSchema({
     ...authTables,
     games: defineTable({
+        hostId: v.id("users"),
         code: v.string(),
-        players: v.array(v.id("users")),
-    })
+        players: v.optional(v.array(v.id("users"))),
+        started: v.boolean(),
+    }).index("by_code", ["code"])
 })
 
 export default schema;

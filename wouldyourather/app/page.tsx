@@ -1,51 +1,84 @@
-"use client";
+"use client"
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { api } from "@/convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Apple, AppleIcon } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { ArrowLeftFromLine, Codesandbox, KeyIcon, LogIn, LogOut, LogOutIcon, PlusIcon, } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-    const { signIn } = useAuthActions();
+    const router = useRouter();    
+    const { signOut } = useAuthActions();
+    const userId = useQuery(api.users.getCurrentUserId);
+    const user = useQuery(api.users.getUser, userId ? { userId } : "skip");
+    const createGame = useMutation(api.games.createGame);
+
+    const handleCreateGame = async () => {
+        const gameId = await createGame();
+        router.push(`/create/${gameId}`);
+    };
 
     return (
-        <main className="flex h-screen items-center justify-center">
-            <div className="w-full max-w-[400px]">
-                <Card className="">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-xl">Log In</CardTitle>
-                        <CardDescription>Login with you GitHub account</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form>
-                            <FieldGroup>
-                                <Field>
-                                    <Button 
-                                        className="cursor-pointer"
-                                        variant={'outline'} 
-                                        type="button"
-                                        onClick={() => signIn("github")}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-github" viewBox="0 0 16 16">
-                                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/>
-                                        </svg>
-                                        GitHub
-                                    </Button>
-                                    <Button 
-                                        className="cursor-pointer"
-                                        variant={'outline'} 
-                                        type="button"
-                                        onClick={() => signIn("apple")}
-                                    >
-                                        <Apple />
-                                        Apple
-                                    </Button>
-                                </Field>
-                            </FieldGroup>
-                        </form>
-                    </CardContent>
-                </Card>
+        <main className="h-screen">
+            <header className="flex w-screen items-center border-b p-4 justify-between">
+                <AlertDialog>
+                    <AlertDialogTrigger>
+                        <Button variant={'destructive'}>
+                            <LogOutIcon className="rotate-180" />
+                            Sign Out
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent size="sm">
+                        <AlertDialogHeader>
+                            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                                <ArrowLeftFromLine />
+                            </AlertDialogMedia>
+                            <AlertDialogTitle>Sign Out?</AlertDialogTitle>
+                            <AlertDialogDescription>This action will log you out of your account.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={signOut} variant={'destructive'}>Sign Out</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <Badge variant={'secondary'}>
+                    {user?.name}
+                </Badge>
+            </header>
+            <div className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                    <Card size="sm">
+                        <CardHeader>
+                            <CardTitle>Host a game?</CardTitle>
+                            <CardDescription>Click the button below to create a new game and invite your friends!</CardDescription>
+                        </CardHeader>
+                        <CardFooter>
+                            <Button variant={'default'} onClick={async () => await handleCreateGame()}>
+                                <PlusIcon />
+                                Create Game
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                    <Card size="sm">
+                        <CardHeader>
+                            <CardTitle>Join a game?</CardTitle>
+                            <CardDescription>Click the button below to join a game and play with your friends!</CardDescription>
+                        </CardHeader>
+                        <CardFooter>
+                            <Button asChild variant={'default'}>
+                                <a href="/join">
+                                    <LogIn />
+                                    Join Game
+                                </a>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
             </div>
         </main>
     )
