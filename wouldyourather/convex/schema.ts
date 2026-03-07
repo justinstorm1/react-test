@@ -9,6 +9,19 @@ const schema = defineSchema({
         code: v.string(),
         players: v.optional(v.array(v.id("users"))),
         started: v.boolean(),
+        questions: v.optional(
+            v.array(
+                v.object({
+                    optionA: v.string(),
+                    optionB: v.string(),
+                    votesA: v.optional(v.array(v.id("users"))),
+                    votesB: v.optional(v.array(v.id("users"))),
+                })
+            )
+        ),
+        questionIndex: v.optional(v.number()),
+        voting: v.boolean(),
+        ended: v.boolean(),
     }).index("by_code", ["code"])
 })
 

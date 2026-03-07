@@ -1,64 +1,362 @@
 "use client"
 
 import Player from "@/components/Player"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field } from "@/components/ui/field"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Field, FieldContent, FieldLabel, FieldTitle } from "@/components/ui/field"
 import { Item, ItemContent, ItemActions } from "@/components/ui/item"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { useQuery } from "convex/react"
-import { ArrowLeftFromLine, Flag, FlagIcon, X, XCircleIcon } from "lucide-react"
+import { useQuery, useMutation } from "convex/react"
+import { ArrowLeftFromLine, Flag, FlagIcon, X, XCircleIcon, ArrowLeft, XIcon, BookmarkCheckIcon } from "lucide-react"
 import { useParams } from "next/navigation"
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
+    const router = useRouter();
     const params = useParams()
     const gameId = params?.gameId as Id<"games">;
-
-    const userId = useQuery(api.users.getCurrentUserId);
+    
     const game = useQuery(api.games.getGameFromId, { gameId: gameId! });
+    const deleteGame = useMutation(api.games.deleteGame);
+    const removePlayer = useMutation(api.games.leaveGame);
+    const startGame = useMutation(api.games.startGame);
+    const revealVotes = useMutation(api.games.revealVotes);
+    const nextQuestion = useMutation(api.games.nextQuestion);
+    const endGame = useMutation(api.games.endGame);
+    const createGame = useMutation(api.games.createGame);
+    
+    if (!game) {
+        return (
+            <main>
+                <header className="flex items-center border-b p-4 justify-between">
+                    <Button 
+                        className="cursor-pointer" 
+                        variant={'outline'}
+                        onClick={() => window.history.back()}
+                    >
+                        <ArrowLeft />
+                        Go Back
+                    </Button>
+                </header>
+                <div className="p-5 space-y-10">
+                    <p>Can't find your game</p>
+                </div>
+            </main>
+        )
+    }
 
-    if (!game) return <div>Loading...</div>
+    const handleDeleteGame = async () => {
+        try {
+            await deleteGame({ gameId });
+            window.history.back();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleRemovePlayer = async (userId: Id<"users">) => {
+        try {
+            await removePlayer({ 
+                gameId: gameId!, 
+                userId
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleStartGame = async () => {
+        try {
+            await startGame({ gameId: gameId! });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleRevealVotes = async () => {
+        try {
+            await revealVotes({ gameId });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleNextQuestion = async () => {
+        try {
+            await nextQuestion({ gameId });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleEndGame = async () => {
+        try {
+            await endGame({ gameId });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const handleNewGame = async () => {
+        try {
+            await deleteGame({ gameId: game._id });
+            const gameId = await createGame();
+            router.push(`/create/${gameId}`);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const questionIndex = game.questionIndex ?? 0;
+    const question = game.questions?.[questionIndex];
+    const totalQuestions = game.questions?.length ?? 0;
+    const isLastQuestion = questionIndex + 1 === totalQuestions;
+
+    const votesA = question?.votesA?.length ?? 0;
+    const votesB = question?.votesB?.length ?? 0;
+    const totalVotes = votesA + votesB;
+
 
     return (
         <main>
             <header className="flex items-center border-b p-4 justify-between">
-                <Button 
-                    variant={'destructive'} 
-                    onClick={() => window.history.back()}
-                    className="cursor-pointer"
-                >
-                    <FlagIcon />
-                    End Game
-                </Button>
-                <Button variant={'default'} onClick={() => window.history.back()}>
-                    <FlagIcon />
-                    Start Game
-                </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger>
+                        <Button 
+                            className="cursor-pointer" 
+                            variant={'destructive'}
+                        >
+                            <FlagIcon />
+                            End Game
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent size="sm">
+                        <AlertDialogHeader>
+                            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                                <Flag />
+                            </AlertDialogMedia>
+                            <AlertDialogTitle>End Game?</AlertDialogTitle>
+                            <AlertDialogDescription>This action will end your game.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel
+                                className="cursor-pointer"
+                            >Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                                className="cursor-pointer"
+                                onClick={() => handleDeleteGame()} 
+                                variant={'destructive'}
+                            >End Game</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                {game.ended ? (
+                    <Button
+                        className="cursor-pointer"
+                        onClick={handleNewGame}
+                    >
+                        <FlagIcon />
+                        New Game
+                    </Button>
+                ) : !game.started ? (
+                    <Button
+                        className="cursor-pointer"
+                        onClick={handleStartGame}
+                    >
+                        <FlagIcon />
+                        Start Game
+                    </Button>
+                ) : game.voting ? (
+                    <Button
+                        className="cursor-pointer"
+                        onClick={handleRevealVotes}
+                    >
+                        <FlagIcon />
+                        Reveal Votes
+                    </Button>
+                ) : !isLastQuestion ? (
+                    <Button
+                        className="cursor-pointer"
+                        onClick={handleNextQuestion}
+                    >
+                        <FlagIcon />
+                        Next Question
+                    </Button>
+                ) : (
+                    <Button
+                        className="cursor-pointer"
+                        onClick={handleEndGame}
+                    >
+                        <BookmarkCheckIcon />
+                        End Game
+                    </Button>
+                )}
             </header>
 
-            <div className="p-5 space-y-10">
-                <Card className="flex-1 max-w-md mx-auto">
-                    <CardHeader className="text-center">
-                        <CardDescription>Join Code</CardDescription>
-                        <CardTitle className="font-bold text-6xl">{game.code}</CardTitle>
-                    </CardHeader>
-                </Card>
+            {!game.started ? (
+                <div className="p-5 space-y-10">
+                    <Card className="flex-1 max-w-md mx-auto">
+                        <CardHeader className="text-center">
+                            <CardDescription>Join Code</CardDescription>
+                            <CardTitle className="font-bold text-6xl">{game.code}</CardTitle>
+                        </CardHeader>
+                    </Card>
 
-             {game.players && game.players.map(userId => (
-                <Item variant={'muted'} key={userId} className="w-fit">
-                    <ItemActions>
-                        <Button variant={'ghost'} size="icon" className="cursor-pointer rounded-full">
-                            <X />
-                        </Button>
-                    </ItemActions>
-                    <ItemContent>
-                        <Player userId={userId} />
-                    </ItemContent>
-                </Item>
-            ))}
-            </div>
+
+                    <div className="flex gap-4 flex-wrap justify-center mt-10">
+                        {game.players && game.players.map(userId => (
+                            <DropdownMenu
+                                key={userId}
+                            >
+                                <DropdownMenuTrigger asChild>
+                                    <Button className="px-3 py-4" variant={'outline'}>
+                                        <Player userId={userId} />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-40" align="start">
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuItem
+                                        onClick={() => handleRemovePlayer(userId)}
+                                        variant={"destructive"}
+                                    >
+                                        <XIcon />
+                                        Remove Player
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ))}
+                    </div>
+
+                </div>
+            ) : (
+                !game.ended ? (
+                    <div className="p-5 space-y-10">
+                        <div className="mx-auto text-center">
+                            <p>Question {(game.questionIndex ?? 0) + 1} of {game?.questions?.length ?? 0}</p>
+                            <h1 className="text-3xl font-semibold">Would You Rather?</h1>
+                            <p>{totalVotes} / {game.players?.length} votes</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            <Card>
+                                <CardHeader className="text-center">
+                                    <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
+                                </CardHeader>
+                                {!game.voting && (
+                                    <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                        <div className="flex flex-wrap gap-2">
+                                            {question?.votesA?.map((userId) => (
+                                                <Badge key={userId} variant="secondary" className="px-2 py-1">
+                                                    <Player userId={userId} />
+                                                </Badge>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex justify-end">
+                                            <Badge variant="outline" className="text-sm">
+                                                {question?.votesA?.length ?? 0} votes
+                                            </Badge>
+                                        </div>
+                                    </CardFooter>
+                                )}
+                            </Card>
+                            <Card>
+                                <CardHeader className="text-center">
+                                    <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
+                                </CardHeader>
+                                {!game.voting && (
+                                    <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                        <div className="flex flex-wrap gap-2">
+                                            {question?.votesB?.map((userId) => (
+                                                <Badge key={userId} variant="secondary" className="px-2 py-1">
+                                                    <Player userId={userId} />
+                                                </Badge>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex justify-end">
+                                            <Badge variant="outline" className="text-sm">
+                                                {question?.votesB?.length ?? 0} votes
+                                            </Badge>
+                                        </div>
+                                    </CardFooter>
+                                )}
+                            </Card>
+                        </div>
+
+                    </div>
+                ) : (
+                    <div className="p-5 space-y-10">
+                        <div className="mx-auto text-center">
+                            <p>Game Ended</p>
+                            <h1 className="text-3xl font-semibold">Would You Rather?</h1>
+                            <p>Results</p>
+                        </div>
+                        <div className="space-y-10 max-w-2xl mx-auto">
+                            {game.questions?.map((question, index) => (
+                                <div className="space-y-2">
+                                    <p className="text-center">Question {index + 1}</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Card>
+                                            <CardHeader className="text-center">
+                                                <CardTitle>{question.optionA}</CardTitle>
+                                            </CardHeader>
+                                            <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {question?.votesA?.map((userId) => (
+                                                        <Badge key={userId} variant="secondary" className="px-2 py-1">
+                                                            <Player userId={userId} />
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex justify-end">
+                                                    <Badge variant="outline" className="text-sm">
+                                                        {question?.votesA?.length ?? 0} votes
+                                                    </Badge>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                        <Card>
+                                            <CardHeader className="text-center">
+                                                <CardTitle>{question.optionB}</CardTitle>
+                                            </CardHeader>
+                                            <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {question?.votesB?.map((userId) => (
+                                                        <Badge key={userId} variant="secondary" className="px-2 py-1">
+                                                            <Player userId={userId} />
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex justify-end">
+                                                    <Badge variant="outline" className="text-sm">
+                                                        {question?.votesB?.length ?? 0} votes
+                                                    </Badge>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )
+            )}
+
+            <Item variant={'muted'} className="w-fit absolute right-5 bottom-5"> 
+                <ItemContent className="font-bold text-xl">
+                    {game.code}
+                </ItemContent>
+            </Item>
+
         </main>
     )
 }

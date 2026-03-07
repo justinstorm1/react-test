@@ -58,7 +58,7 @@ export default function Page() {
                             <CardDescription>Click the button below to create a new game and invite your friends!</CardDescription>
                         </CardHeader>
                         <CardFooter>
-                            <Button variant={'default'} onClick={async () => await handleCreateGame()}>
+                            <Button className="cursor-pointer" variant={'default'} onClick={async () => await handleCreateGame()}>
                                 <PlusIcon />
                                 Create Game
                             </Button>
