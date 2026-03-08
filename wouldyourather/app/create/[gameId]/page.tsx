@@ -155,6 +155,7 @@ export default function Page() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+                <p className="text-lg font-semibold">{game.code}</p>
                 {game.ended ? (
                     <Button
                         className="cursor-pointer"
@@ -209,13 +210,16 @@ export default function Page() {
 
 
                     <div className="flex gap-4 flex-wrap justify-center mt-10">
-                        {game.players && game.players.map(userId => (
+                        {game.players && game.players.map(player => (
                             <DropdownMenu
-                                key={userId}
+                                key={player.userId}
                             >
                                 <DropdownMenuTrigger asChild>
                                     <Button className="px-3 py-4" variant={'outline'}>
-                                        <Player userId={userId} />
+                                        <Player 
+                                            gameId={game._id}
+                                            userId={player.userId}
+                                        />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-40" align="start">
@@ -223,8 +227,9 @@ export default function Page() {
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     </DropdownMenuGroup>
                                     <DropdownMenuItem
-                                        onClick={() => handleRemovePlayer(userId)}
+                                        onClick={() => handleRemovePlayer(player.userId)}
                                         variant={"destructive"}
+                                        className="cursor-pointer"
                                     >
                                         <XIcon />
                                         Remove Player
@@ -253,7 +258,10 @@ export default function Page() {
                                         <div className="flex flex-wrap gap-2">
                                             {question?.votesA?.map((userId) => (
                                                 <Badge key={userId} variant="secondary" className="px-2 py-1">
-                                                    <Player userId={userId} />
+                                                    <Player 
+                                                        gameId={game._id}
+                                                        userId={userId}
+                                                    />
                                                 </Badge>
                                             ))}
                                         </div>
@@ -275,7 +283,10 @@ export default function Page() {
                                         <div className="flex flex-wrap gap-2">
                                             {question?.votesB?.map((userId) => (
                                                 <Badge key={userId} variant="secondary" className="px-2 py-1">
-                                                    <Player userId={userId} />
+                                                    <Player 
+                                                        gameId={game._id}
+                                                        userId={userId} 
+                                                    />
                                                 </Badge>
                                             ))}
                                         </div>
@@ -311,7 +322,10 @@ export default function Page() {
                                                 <div className="flex flex-wrap gap-2">
                                                     {question?.votesA?.map((userId) => (
                                                         <Badge key={userId} variant="secondary" className="px-2 py-1">
-                                                            <Player userId={userId} />
+                                                             <Player 
+                                                                gameId={game._id}
+                                                                userId={userId} 
+                                                            />
                                                         </Badge>
                                                     ))}
                                                 </div>
@@ -331,7 +345,10 @@ export default function Page() {
                                                 <div className="flex flex-wrap gap-2">
                                                     {question?.votesB?.map((userId) => (
                                                         <Badge key={userId} variant="secondary" className="px-2 py-1">
-                                                            <Player userId={userId} />
+                                                             <Player 
+                                                                gameId={game._id}
+                                                                userId={userId} 
+                                                            />
                                                         </Badge>
                                                     ))}
                                                 </div>
@@ -351,11 +368,11 @@ export default function Page() {
                 )
             )}
 
-            <Item variant={'muted'} className="w-fit absolute right-5 bottom-5"> 
+            {/* <Item variant={'muted'} className="w-fit fixed right-5 bottom-5"> 
                 <ItemContent className="font-bold text-xl">
                     {game.code}
                 </ItemContent>
-            </Item>
+            </Item> */}
 
         </main>
     )

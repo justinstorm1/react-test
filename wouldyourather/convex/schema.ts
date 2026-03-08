@@ -7,7 +7,12 @@ const schema = defineSchema({
     games: defineTable({
         hostId: v.id("users"),
         code: v.string(),
-        players: v.optional(v.array(v.id("users"))),
+        players: v.optional(v.array(
+            v.object({
+                userId: v.id("users"),
+                name: v.string()
+            })
+        )),
         started: v.boolean(),
         questions: v.optional(
             v.array(

@@ -13,10 +13,12 @@ import { useQuery, useMutation } from "convex/react"
 import { ArrowLeftFromLine, Flag, FlagIcon, X, XCircleIcon, ArrowLeft } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
     const params = useParams()
     const gameId = params?.gameId as Id<"games">;
+    const router = useRouter();
 
     const userId = useQuery(api.users.getCurrentUserId);
     const game = useQuery(api.games.getGameFromId, { gameId: gameId! });
@@ -40,7 +42,7 @@ export default function Page() {
     }
     
     useEffect(() => {
-        if (game && userId && !game.players?.includes(userId)) {
+        if (game && userId && !game.players?.some(player => player.userId === userId)) {
             window.history.back();
         }
 
@@ -84,10 +86,10 @@ export default function Page() {
                     <Button 
                         className="cursor-pointer" 
                         variant={'outline'}
-                        onClick={() => window.history.back()}
+                        onClick={() => router.push('/')}
                     >
                         <ArrowLeft />
-                        Go Back
+                        Go Home
                     </Button>
                 </header>
                 <div className="p-5 space-y-10">
@@ -138,13 +140,16 @@ export default function Page() {
                     <div className="p-5 text-center">
                         <h1 className="font-semibold text-2xl">Waiting for the host to start the game...</h1>
                         <div className="flex gap-4 flex-wrap justify-center mt-10">
-                            {game.players && game.players.map(userId => (
+                            {game.players && game.players.map(player => (
                                 <Button 
                                     variant={'outline'} 
-                                    key={userId} 
+                                    key={player.userId} 
                                     className="px-3 py-4"
                                 >
-                                    <Player userId={userId} />
+                                    <Player 
+                                        gameId={game._id}
+                                        userId={player.userId}
+                                    />
                                 </Button>
                             ))}
                         </div>
@@ -159,7 +164,7 @@ export default function Page() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         <Card 
                             onClick={() => handleSelectOption("A")}
-                            className={option === "A" ? "bg-primary/20 border border-primary/50" : ""}
+                            className={`cursor-pointer ${option === "A" ? "bg-primary/20 border border-primary/50" : ""}`}
                         >
                             <CardHeader className="text-center">
                                 <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
@@ -167,7 +172,7 @@ export default function Page() {
                         </Card>
                         <Card
                             onClick={() => handleSelectOption("B")} 
-                            className={option === "B" ? "bg-primary/20 border border-primary/50" : ""}
+                            className={`cursor-pointer ${option === "B" ? "bg-primary/20 border border-primary/50" : ""}`}
                         >
                             <CardHeader className="text-center">
                                 <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
@@ -178,7 +183,7 @@ export default function Page() {
                 </div>
             )}
 
-            <Item variant={'muted'} className="w-fit absolute right-5 bottom-5"> 
+            <Item variant={'muted'} className="w-fit fixed right-5 bottom-5"> 
                 <ItemContent className="font-bold text-xl">
                     {game.code}
                 </ItemContent>
