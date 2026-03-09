@@ -164,7 +164,7 @@ export default function Page() {
                 </header>
             )}
             {!game.started ? (
-                <div className="max-w-4xl flex flex-col items-center justify-center">
+                <div className="mx-auto max-w-4xl flex flex-col items-center justify-center">
                     
                     <div className="p-5 text-center">
                         <h1 className="font-semibold text-2xl">Waiting for the host to start the game...</h1>
@@ -185,7 +185,7 @@ export default function Page() {
                     </div>
                 </div>
             ) : (
-                <div>
+                <div className="mx-auto">
                     {game.started && game.voting && (
                         <div className="h-4 w-full p-3 mb-5">
                             <div 
@@ -194,7 +194,7 @@ export default function Page() {
                             ></div>
                         </div>
                     )}
-                    <div className="w-full p-5 max-w-4xl space-y-10">
+                    <div className="w-full mx-auto p-5 max-w-4xl space-y-10">
                         <div className="mx-auto text-center space-y-3">
                             <Badge variant={'secondary'}>Question {(game.questionIndex ?? 0) + 1} / {game?.questions?.length ?? 0}</Badge>
                             <h1 className="text-center text-4xl md:text-5xl font-bold">Would You Rather...</h1>
@@ -236,7 +236,7 @@ export default function Page() {
                             </Card>
                         </div>
 
-                        {option && (
+                        {option && game.voting && (
                             <p className="text-center text-sm text-muted-foreground">
                                 Waiting for other players...
                             </p>
