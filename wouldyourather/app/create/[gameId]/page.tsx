@@ -32,7 +32,7 @@ export default function Page() {
     
     if (!game) {
         return (
-            <main>
+            <main className="min-h-screen flex flex-col">
                 <header className="flex items-center border-b p-4 justify-between">
                     <Button 
                         className="cursor-pointer" 
@@ -243,14 +243,22 @@ export default function Page() {
             ) : (
                 !game.ended ? (
                     <div className="p-5 space-y-10">
-                        <div className="mx-auto text-center">
-                            <p>Question {(game.questionIndex ?? 0) + 1} of {game?.questions?.length ?? 0}</p>
-                            <h1 className="text-3xl font-semibold">Would You Rather?</h1>
+                        <div className="mx-auto text-center space-y-3">
+                            <Badge variant={'secondary'}>Question {(game.questionIndex ?? 0) + 1} / {game?.questions?.length ?? 0}</Badge>
+                            <h1 className="text-center text-4xl md:text-5xl font-bold">Would You Rather...</h1>
                             <p>{totalVotes} / {game.players?.length} votes</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                            <Card>
-                                <CardHeader className="text-center">
+                            <Card
+                                className={`
+                                    w-full rounded-3xl text-xl font-semibold
+                                    transition-all duration-200
+                                    shadow-lg
+                                    hover:scale-105
+                                    active:scale-95
+                                `}
+                            >
+                                <CardHeader className="text-center p-10">
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
                                 </CardHeader>
                                 {!game.voting && (
@@ -274,8 +282,16 @@ export default function Page() {
                                     </CardFooter>
                                 )}
                             </Card>
-                            <Card>
-                                <CardHeader className="text-center">
+                            <Card
+                                className={`
+                                    w-full rounded-3xl text-xl font-semibold
+                                    transition-all duration-200
+                                    shadow-lg
+                                    hover:scale-105
+                                    active:scale-95
+                                `}
+                            >
+                                <CardHeader className="text-center p-10">
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
                                 </CardHeader>
                                 {!game.voting && (
@@ -304,25 +320,33 @@ export default function Page() {
                     </div>
                 ) : (
                     <div className="p-5 space-y-10">
-                        <div className="mx-auto text-center">
-                            <p>Game Ended</p>
-                            <h1 className="text-3xl font-semibold">Would You Rather?</h1>
+                        <div className="mx-auto text-center space-y-3">
+                            <Badge variant={'secondary'}>Game Ended</Badge>
+                            <h1 className="text-center text-4xl md:text-5xl font-bold">Would You Rather...</h1>
                             <p>Results</p>
                         </div>
-                        <div className="space-y-10 max-w-2xl mx-auto">
+                        <div className="space-y-20 max-w-2xl mx-auto">
                             {game.questions?.map((question, index) => (
-                                <div className="space-y-2">
-                                    <p className="text-center">Question {index + 1}</p>
+                                <div className="space-y-4">
+                                    <p className="text-center text-xl">Question {index + 1}</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Card>
-                                            <CardHeader className="text-center">
+                                        <Card
+                                            className={`
+                                                w-full rounded-3xl text-xl font-semibold
+                                                transition-all duration-200
+                                                shadow-lg
+                                                hover:scale-105
+                                                active:scale-95
+                                            `}
+                                        >
+                                            <CardHeader className="text-center p-10">
                                                 <CardTitle>{question.optionA}</CardTitle>
                                             </CardHeader>
                                             <CardFooter className="grid grid-cols-2 gap-4 items-start">
                                                 <div className="flex flex-wrap gap-2">
                                                     {question?.votesA?.map((userId) => (
                                                         <Badge key={userId} variant="secondary" className="px-2 py-1">
-                                                             <Player 
+                                                            <Player 
                                                                 gameId={game._id}
                                                                 userId={userId} 
                                                             />
@@ -337,15 +361,23 @@ export default function Page() {
                                                 </div>
                                             </CardFooter>
                                         </Card>
-                                        <Card>
-                                            <CardHeader className="text-center">
+                                        <Card
+                                            className={`
+                                                w-full rounded-3xl text-xl font-semibold
+                                                transition-all duration-200
+                                                shadow-lg
+                                                hover:scale-105
+                                                active:scale-95
+                                            `}
+                                        >
+                                            <CardHeader className="text-center p-10">
                                                 <CardTitle>{question.optionB}</CardTitle>
                                             </CardHeader>
                                             <CardFooter className="grid grid-cols-2 gap-4 items-start">
                                                 <div className="flex flex-wrap gap-2">
                                                     {question?.votesB?.map((userId) => (
                                                         <Badge key={userId} variant="secondary" className="px-2 py-1">
-                                                             <Player 
+                                                            <Player 
                                                                 gameId={game._id}
                                                                 userId={userId} 
                                                             />
@@ -367,12 +399,6 @@ export default function Page() {
                     </div>
                 )
             )}
-
-            {/* <Item variant={'muted'} className="w-fit fixed right-5 bottom-5"> 
-                <ItemContent className="font-bold text-xl">
-                    {game.code}
-                </ItemContent>
-            </Item> */}
 
         </main>
     )

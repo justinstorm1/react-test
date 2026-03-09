@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Field } from "@/components/ui/field"
-import { Item, ItemContent, ItemActions } from "@/components/ui/item"
+import { Item, ItemContent, ItemActions, ItemTitle } from "@/components/ui/item"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useQuery, useMutation } from "convex/react"
@@ -101,7 +101,7 @@ export default function Page() {
 
 
     return (
-        <main>
+        <main className="flex-1 flex flex-col items-center justify-center h-screen">
             {!game.started ? (
                 <div>
                     <header className="flex items-center border-b p-4 justify-between">
@@ -156,38 +156,68 @@ export default function Page() {
                     </div>
                 </div>
             ) : (
-                <div className="p-5 space-y-10">
-                    <div className="mx-auto text-center">
-                        <p>Question {(game.questionIndex ?? 0) + 1} of {game?.questions?.length ?? 0}</p>
-                        <h1 className="text-3xl font-semibold">Would You Rather?</h1>
+                <div className="w-full max-w-4xl p-5 space-y-10">
+                    <div className="mx-auto text-center space-y-3">
+                        <Badge variant={'secondary'}>Question {(game.questionIndex ?? 0) + 1} / {game?.questions?.length ?? 0}</Badge>
+                        <h1 className="text-center text-4xl md:text-5xl font-bold">Would You Rather...</h1>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
                         <Card 
                             onClick={() => handleSelectOption("A")}
-                            className={`cursor-pointer ${option === "A" ? "bg-primary/20 border border-primary/50" : ""}`}
+                            className={`
+                                w-full rounded-3xl text-xl font-semibold
+                                transition-all duration-200
+                                shadow-lg
+                                hover:scale-105
+                                active:scale-95
+                                ${option === "A"
+                                    ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
+                                    : "bg-card"}
+                            `}
                         >
-                            <CardHeader className="text-center">
+                            <CardHeader className="text-center p-10">
                                 <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
                             </CardHeader>
                         </Card>
-                        <Card
-                            onClick={() => handleSelectOption("B")} 
-                            className={`cursor-pointer ${option === "B" ? "bg-primary/20 border border-primary/50" : ""}`}
+                        <Card 
+                            onClick={() => handleSelectOption("B")}
+                            className={`
+                                w-full rounded-3xl text-xl font-semibold
+                                transition-all duration-200
+                                shadow-lg
+                                hover:scale-105
+                                active:scale-95
+                                ${option === "B"
+                                    ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
+                                    : "bg-card"}
+                            `}
                         >
-                            <CardHeader className="text-center">
+                            <CardHeader className="text-center p-10">
                                 <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
                             </CardHeader>
                         </Card>
                     </div>
 
+                    {option && (
+                        <p className="text-center text-sm text-muted-foreground">
+                            Waiting for other players...
+                        </p>
+
+                    )}
+
                 </div>
             )}
 
-            <Item variant={'muted'} className="w-fit fixed right-5 bottom-5"> 
-                <ItemContent className="font-bold text-xl">
-                    {game.code}
-                </ItemContent>
-            </Item>
+             <div className="fixed bottom-6 right-6">
+                <div className="bg-background border shadow-xl rounded-xl px-5 py-3">
+                    <p className="text-xs text-muted-foreground">
+                        Game Code
+                    </p>
+                    <p className="text-xl font-bold tracking-widest">
+                        {game.code}
+                    </p>
+                </div>
+            </div>
                 
         </main>
     )
