@@ -13,8 +13,10 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useQuery, useMutation } from "convex/react"
 import { ArrowLeftFromLine, Flag, FlagIcon, X, XCircleIcon, ArrowLeft, XIcon, BookmarkCheckIcon } from "lucide-react"
+import { getFrameSource } from "next/dist/next-devtools/shared/stack-frame";
 import { useParams } from "next/navigation"
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
 
 export default function Page() {
     const router = useRouter();
@@ -29,7 +31,41 @@ export default function Page() {
     const nextQuestion = useMutation(api.games.nextQuestion);
     const endGame = useMutation(api.games.endGame);
     const createGame = useMutation(api.games.createGame);
+    const [voteStart, setVoteStart] = useState<number | null>(null);
+    const [now, setNow] = useState(Date.now());
+    const duration = 20000;
     
+    useEffect(() => {
+        if (!game?.voting) return;
+
+        if ((game?.questions?.[questionIndex].votesA?.length ?? 0) + (game?.questions?.[questionIndex].votesB?.length ?? 0) >= (game?.players?.length ?? 0)) {
+            handleRevealVotes();
+        }
+    }, [game]);
+
+    useEffect(() => {
+        if (!game?.voting) return;
+
+        const start = Date.now();
+        setVoteStart(start);
+
+        const interval = setInterval(() => {
+            const current = Date.now();
+            setNow(current);
+
+            if (current - start >= duration) {
+                clearInterval(interval);
+                handleRevealVotes();
+            }
+        }, 50); // smooth updates
+
+        return () => clearInterval(interval);
+    }, [game?.questionIndex, game?.voting]);
+
+    const elapsed = voteStart ? Date.now() - voteStart : 0;
+    const remaining = Math.max(duration - elapsed, 0);
+    const timePercent = `${(remaining / duration) * 100}%`;
+
     if (!game) {
         return (
             <main className="min-h-screen flex flex-col">
@@ -112,6 +148,7 @@ export default function Page() {
         }
     }
 
+
     const questionIndex = game.questionIndex ?? 0;
     const question = game.questions?.[questionIndex];
     const totalQuestions = game.questions?.length ?? 0;
@@ -124,80 +161,90 @@ export default function Page() {
 
     return (
         <main>
-            <header className="flex items-center border-b p-4 justify-between">
-                <AlertDialog>
-                    <AlertDialogTrigger>
-                        <Button 
-                            className="cursor-pointer" 
-                            variant={'destructive'}
+            <div>
+                <header className="flex items-center border-b p-4 justify-between">
+                    <AlertDialog>
+                        <AlertDialogTrigger>
+                            <Button 
+                                className="cursor-pointer" 
+                                variant={'destructive'}
+                                >
+                                <FlagIcon />
+                                End Game
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent size="sm">
+                            <AlertDialogHeader>
+                                <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                                    <Flag />
+                                </AlertDialogMedia>
+                                <AlertDialogTitle>End Game?</AlertDialogTitle>
+                                <AlertDialogDescription>This action will end your game.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel
+                                    className="cursor-pointer"
+                                >Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                    className="cursor-pointer"
+                                    onClick={() => handleDeleteGame()} 
+                                    variant={'destructive'}
+                                >End Game</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <p className="text-lg font-semibold">{game.code}</p>
+                    {game.ended ? (
+                        <Button
+                            className="cursor-pointer"
+                            onClick={handleNewGame}
                         >
                             <FlagIcon />
-                            End Game
+                            New Game
                         </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent size="sm">
-                        <AlertDialogHeader>
-                            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
-                                <Flag />
-                            </AlertDialogMedia>
-                            <AlertDialogTitle>End Game?</AlertDialogTitle>
-                            <AlertDialogDescription>This action will end your game.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel
-                                className="cursor-pointer"
-                            >Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                                className="cursor-pointer"
-                                onClick={() => handleDeleteGame()} 
-                                variant={'destructive'}
-                            >End Game</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <p className="text-lg font-semibold">{game.code}</p>
-                {game.ended ? (
-                    <Button
-                        className="cursor-pointer"
-                        onClick={handleNewGame}
-                    >
-                        <FlagIcon />
-                        New Game
-                    </Button>
-                ) : !game.started ? (
-                    <Button
+                    ) : !game.started ? (
+                        <Button
                         className="cursor-pointer"
                         onClick={handleStartGame}
-                    >
-                        <FlagIcon />
-                        Start Game
-                    </Button>
-                ) : game.voting ? (
-                    <Button
-                        className="cursor-pointer"
-                        onClick={handleRevealVotes}
-                    >
-                        <FlagIcon />
-                        Reveal Votes
-                    </Button>
-                ) : !isLastQuestion ? (
-                    <Button
+                        >
+                            <FlagIcon />
+                            Start Game
+                        </Button>
+                    ) : game.voting ? (
+                        <Button
+                            className="cursor-pointer"
+                            onClick={handleRevealVotes}
+                        >
+                            <FlagIcon />
+                            Reveal Votes
+                        </Button>
+                    ) : !isLastQuestion ? (
+                        <Button
                         className="cursor-pointer"
                         onClick={handleNextQuestion}
-                    >
-                        <FlagIcon />
-                        Next Question
-                    </Button>
-                ) : (
-                    <Button
+                        >
+                            <FlagIcon />
+                            Next Question
+                        </Button>
+                    ) : (
+                        <Button
                         className="cursor-pointer"
                         onClick={handleEndGame}
-                    >
-                        <BookmarkCheckIcon />
-                        End Game
-                    </Button>
+                        >
+                            <BookmarkCheckIcon />
+                            End Game
+                        </Button>
+                    )}
+                </header>
+                {game.started && game.voting && (
+                    <div className="h-4 w-full p-3">
+                       <div 
+                            className="h-4 bg-primary rounded-full transition-all duration-50"
+                            style={{ width: timePercent }}
+                        ></div>
+                    </div>
                 )}
-            </header>
+            </div>
 
             {!game.started ? (
                 <div className="p-5 space-y-10">
@@ -215,7 +262,7 @@ export default function Page() {
                                 key={player.userId}
                             >
                                 <DropdownMenuTrigger asChild>
-                                    <Button className="px-3 py-4" variant={'outline'}>
+                                    <Button className="cursor-pointer chpx-3 py-4" variant={'outline'}>
                                         <Player 
                                             gameId={game._id}
                                             userId={player.userId}
@@ -259,6 +306,11 @@ export default function Page() {
                                 `}
                             >
                                 <CardHeader className="text-center p-10">
+                                    {!game.voting && (
+                                        <CardTitle className="text-2xl">
+                                            {((game.questions?.[game.questionIndex ?? 0]?.votesA?.length ?? 0) / (game.players?.length ?? 0)) * 100}%
+                                        </CardTitle>
+                                    )}
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
                                 </CardHeader>
                                 {!game.voting && (
@@ -292,6 +344,11 @@ export default function Page() {
                                 `}
                             >
                                 <CardHeader className="text-center p-10">
+                                    {!game.voting && (
+                                        <CardTitle className="text-2xl">
+                                            {((game.questions?.[game.questionIndex ?? 0]?.votesB?.length ?? 0) / (game.players?.length ?? 0)) * 100}%
+                                        </CardTitle>
+                                    )}
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
                                 </CardHeader>
                                 {!game.voting && (

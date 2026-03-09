@@ -30,6 +30,32 @@ export default function Page() {
 
     const [option, setOption] = useState<"A" | "B" | undefined>(votedA ? "A" : votedB ? "B" : undefined);
 
+
+    const [voteStart, setVoteStart] = useState<number | null>(null);
+    const [now, setNow] = useState(Date.now());
+    const duration = 20000;
+
+    useEffect(() => {
+        if (!game?.voting) return;
+
+        const start = Date.now();
+        setVoteStart(start);
+
+        const interval = setInterval(() => {
+            const current = Date.now();
+            setNow(current);
+        }, 50); // smooth updates
+
+        return () => clearInterval(interval);
+    }, [game?.questionIndex, game?.voting]);
+
+    const elapsed = voteStart ? Date.now() - voteStart : 0;
+    const remaining = Math.max(duration - elapsed, 0);
+    const timePercent = `${(remaining / duration) * 100}%`;
+
+
+
+
     const handleLeaveGame = async () => {
         try {
             await leaveGame({ 
@@ -56,6 +82,7 @@ export default function Page() {
 
     const handleSelectOption = async (selectedOption: "A" | "B") => {
         try {
+            if (!game?.voting) return;
             if (option === undefined) {
                 if (selectedOption === "A") {
                     setOption("A");
@@ -101,41 +128,43 @@ export default function Page() {
 
 
     return (
-        <main className="flex-1 flex flex-col items-center justify-center h-screen">
-            {!game.started ? (
-                <div>
-                    <header className="flex items-center border-b p-4 justify-between">
-                        <AlertDialog>
-                            <AlertDialogTrigger>
-                                <Button 
-                                    className="cursor-pointer" 
+        <main className="h-screen">
+            {!game.started && (
+                <header className="flex items-center border-b p-4 justify-between">
+                    <AlertDialog>
+                        <AlertDialogTrigger>
+                            <Button 
+                                className="cursor-pointer" 
+                                variant={'destructive'}
+                            >
+                                <ArrowLeft />
+                                Leave Game
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent size="sm">
+                            <AlertDialogHeader>
+                                <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                                    <ArrowLeftFromLine />
+                                </AlertDialogMedia>
+                                <AlertDialogTitle>End Game?</AlertDialogTitle>
+                                <AlertDialogDescription>This action will end your game.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel
+                                    className="cursor-pointer"
+                                >Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                    className="cursor-pointer"
+                                    onClick={async () => await handleLeaveGame()} 
                                     variant={'destructive'}
-                                >
-                                    <ArrowLeft />
-                                    Leave Game
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent size="sm">
-                                <AlertDialogHeader>
-                                    <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
-                                        <ArrowLeftFromLine />
-                                    </AlertDialogMedia>
-                                    <AlertDialogTitle>End Game?</AlertDialogTitle>
-                                    <AlertDialogDescription>This action will end your game.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel
-                                        className="cursor-pointer"
-                                    >Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                        className="cursor-pointer"
-                                        onClick={async () => await handleLeaveGame()} 
-                                        variant={'destructive'}
-                                    >Leave Game</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </header>
+                                >Leave Game</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </header>
+            )}
+            {!game.started ? (
+                <div className="max-w-4xl flex flex-col items-center justify-center">
                     
                     <div className="p-5 text-center">
                         <h1 className="font-semibold text-2xl">Waiting for the host to start the game...</h1>
@@ -156,55 +185,65 @@ export default function Page() {
                     </div>
                 </div>
             ) : (
-                <div className="w-full max-w-4xl p-5 space-y-10">
-                    <div className="mx-auto text-center space-y-3">
-                        <Badge variant={'secondary'}>Question {(game.questionIndex ?? 0) + 1} / {game?.questions?.length ?? 0}</Badge>
-                        <h1 className="text-center text-4xl md:text-5xl font-bold">Would You Rather...</h1>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                        <Card 
-                            onClick={() => handleSelectOption("A")}
-                            className={`
-                                w-full rounded-3xl text-xl font-semibold
-                                transition-all duration-200
-                                shadow-lg
-                                hover:scale-105
-                                active:scale-95
-                                ${option === "A"
-                                    ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
-                                    : "bg-card"}
-                            `}
-                        >
-                            <CardHeader className="text-center p-10">
-                                <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
-                            </CardHeader>
-                        </Card>
-                        <Card 
-                            onClick={() => handleSelectOption("B")}
-                            className={`
-                                w-full rounded-3xl text-xl font-semibold
-                                transition-all duration-200
-                                shadow-lg
-                                hover:scale-105
-                                active:scale-95
-                                ${option === "B"
-                                    ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
-                                    : "bg-card"}
-                            `}
-                        >
-                            <CardHeader className="text-center p-10">
-                                <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
-                            </CardHeader>
-                        </Card>
-                    </div>
-
-                    {option && (
-                        <p className="text-center text-sm text-muted-foreground">
-                            Waiting for other players...
-                        </p>
-
+                <div>
+                    {game.started && game.voting && (
+                        <div className="h-4 w-full p-3 mb-5">
+                            <div 
+                                className="h-4 bg-primary rounded-full transition-all duration-50"
+                                style={{ width: timePercent }}
+                            ></div>
+                        </div>
                     )}
+                    <div className="w-full p-5 max-w-4xl space-y-10">
+                        <div className="mx-auto text-center space-y-3">
+                            <Badge variant={'secondary'}>Question {(game.questionIndex ?? 0) + 1} / {game?.questions?.length ?? 0}</Badge>
+                            <h1 className="text-center text-4xl md:text-5xl font-bold">Would You Rather...</h1>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                            <Card 
+                                onClick={() => handleSelectOption("A")}
+                                className={`
+                                    w-full rounded-3xl text-xl font-semibold
+                                    transition-all duration-200
+                                    shadow-lg
+                                    hover:scale-105
+                                    active:scale-95
+                                    ${option === "A"
+                                        ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
+                                        : "bg-card"}
+                                `}
+                            >
+                                <CardHeader className="text-center p-10">
+                                    <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
+                                </CardHeader>
+                            </Card>
+                            <Card 
+                                onClick={() => handleSelectOption("B")}
+                                className={`
+                                    w-full rounded-3xl text-xl font-semibold
+                                    transition-all duration-200
+                                    shadow-lg
+                                    hover:scale-105
+                                    active:scale-95
+                                    ${option === "B"
+                                        ? "bg-primary text-primary-foreground ring-4 ring-primary/30"
+                                        : "bg-card"}
+                                `}
+                            >
+                                <CardHeader className="text-center p-10">
+                                    <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
+                                </CardHeader>
+                            </Card>
+                        </div>
 
+                        {option && (
+                            <p className="text-center text-sm text-muted-foreground">
+                                Waiting for other players...
+                            </p>
+
+                        )}
+
+                    </div>
                 </div>
             )}
 
