@@ -314,7 +314,7 @@ export default function Page() {
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
                                 </CardHeader>
                                 {!game.voting && (
-                                    <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                    <CardFooter className="flex-1 grid grid-cols-2 gap-4 items-start">
                                         <div className="flex flex-wrap gap-2">
                                             {question?.votesA?.map((userId) => (
                                                 <Badge key={userId} variant="secondary" className="px-2 py-1">
@@ -352,7 +352,7 @@ export default function Page() {
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
                                 </CardHeader>
                                 {!game.voting && (
-                                    <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                    <CardFooter className="flex-1 grid grid-cols-2 gap-4 items-start">
                                         <div className="flex flex-wrap gap-2">
                                             {question?.votesB?.map((userId) => (
                                                 <Badge key={userId} variant="secondary" className="px-2 py-1">
@@ -399,7 +399,7 @@ export default function Page() {
                                             <CardHeader className="text-center p-10">
                                                 <CardTitle>{question.optionA}</CardTitle>
                                             </CardHeader>
-                                            <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                            <CardFooter className="flex-1 grid grid-cols-2 gap-4 items-start">
                                                 <div className="flex flex-wrap gap-2">
                                                     {question?.votesA?.map((userId) => (
                                                         <Badge key={userId} variant="secondary" className="px-2 py-1">
@@ -430,7 +430,7 @@ export default function Page() {
                                             <CardHeader className="text-center p-10">
                                                 <CardTitle>{question.optionB}</CardTitle>
                                             </CardHeader>
-                                            <CardFooter className="grid grid-cols-2 gap-4 items-start">
+                                            <CardFooter className="flex-1 grid grid-cols-2 gap-4 items-start">
                                                 <div className="flex flex-wrap gap-2">
                                                     {question?.votesB?.map((userId) => (
                                                         <Badge key={userId} variant="secondary" className="px-2 py-1">
