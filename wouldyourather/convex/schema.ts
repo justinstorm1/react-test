@@ -4,6 +4,10 @@ import { v } from "convex/values";
 
 const schema = defineSchema({
     ...authTables,
+    questions: defineTable({
+        optionA: v.string(),
+        optionB: v.string()
+    }),
     games: defineTable({
         hostId: v.id("users"),
         code: v.string(),
