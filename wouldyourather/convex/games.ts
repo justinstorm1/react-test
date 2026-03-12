@@ -5,20 +5,24 @@ import { internal } from './_generated/api';
 
 export const createGame = mutation({
     handler: async (ctx) => {
-        const questions = await ctx.db
+        const dbQuestions = await ctx.db
             .query("questions")
             .collect();
-        function getRandomQuestions(arr: any[], count: number) {
-            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+        function getRandomQuestions<T>(arr: T[], count: number) {
+            const shuffled = [...arr].sort(() => Math.random() - 0.5);
             return shuffled.slice(0, count);
         }
+        const selectedQuestions = getRandomQuestions(dbQuestions, 10).map((q) => ({
+            optionA: q.optionA,
+            optionB: q.optionB,
+        }));
         const hostId = await getAuthUserId(ctx);
         if (!hostId) return null;
         const newGame = await ctx.db.insert("games", {
             hostId,
             code: Math.random().toString().substring(2, 8).toUpperCase(),
             started: false,
-            questions: getRandomQuestions(questions, 10),
+            questions: selectedQuestions,
             voting: false,
             ended: false
         });
