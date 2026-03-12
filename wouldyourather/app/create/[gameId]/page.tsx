@@ -308,7 +308,7 @@ export default function Page() {
                                 <CardHeader className="text-center p-10">
                                     {!game.voting && (
                                         <CardTitle className="text-2xl">
-                                            {((game.questions?.[game.questionIndex ?? 0]?.votesA?.length ?? 0) / (game.players?.length ?? 0)) * 100}%
+                                            {Math.round((votesA / totalVotes) * 100)}%
                                         </CardTitle>
                                     )}
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionA}</CardTitle>
@@ -346,7 +346,7 @@ export default function Page() {
                                 <CardHeader className="text-center p-10">
                                     {!game.voting && (
                                         <CardTitle className="text-2xl">
-                                            {((game.questions?.[game.questionIndex ?? 0]?.votesB?.length ?? 0) / (game.players?.length ?? 0)) * 100}%
+                                           {Math.round((votesB / totalVotes) * 100)}%
                                         </CardTitle>
                                     )}
                                     <CardTitle>{game.questions?.[game.questionIndex ?? 0]?.optionB}</CardTitle>
